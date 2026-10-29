@@ -1,0 +1,35 @@
+name: One-time CSR wording correction
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/one-time-csr-wording.yml
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Update the CSR volunteering statistic
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          old = "volunteers led at Elektrobit"
+          new = "volunteers engaged across CSR volunteering projects"
+          if s.count(old) != 1:
+              raise SystemExit(f"Expected exactly one occurrence of target wording; found {s.count(old)}")
+          p.write_text(s.replace(old, new), encoding="utf-8")
+          PY
+          rm .github/workflows/one-time-csr-wording.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/one-time-csr-wording.yml
+          git commit -m "Update CSR volunteering statistic wording"
+          git push origin HEAD:main
